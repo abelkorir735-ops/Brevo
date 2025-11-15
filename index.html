@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brevo Chat</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f5f5f5;
+            overflow: hidden;
+        }
+        
+        /* Loading Spinner */
+        .spinner-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+        
+        .spinner-container.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        .loading-text {
+            color: white;
+            margin-top: 20px;
+            font-family: Arial, sans-serif;
+            font-size: 18px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Animated Arrow pointing to chat icon */
+        .arrow-container {
+            position: fixed;
+            bottom: 100px;
+            right: 50px;
+            z-index: 9998;
+            animation: bounce 2s ease-in-out infinite;
+            display: none;
+        }
+        
+        .arrow-container.visible {
+            display: block;
+        }
+        
+        .arrow {
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 30px solid #0066ff;
+            position: relative;
+        }
+        
+        .arrow::before {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 40px;
+            background: #0066ff;
+            top: -60px;
+            left: -4px;
+        }
+        
+        .arrow-text {
+            position: absolute;
+            top: -90px;
+            left: -60px;
+            white-space: nowrap;
+            color: #0066ff;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            font-size: 16px;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Spinner -->
+    <div class="spinner-container" id="spinner">
+        <div class="spinner"></div>
+        <div class="loading-text">Loading Conversation please wait...</div>
+    </div>
+    
+    <!-- Arrow pointing to Brevo icon (only shows when user closes chat) -->
+    <div class="arrow-container" id="arrow">
+        <div class="arrow-text">Click here to chat!</div>
+        <div class="arrow"></div>
+    </div>
+
+    <!-- Brevo Conversations {literal} -->
+    <script>
+        (function(d, w, c) {
+            w.BrevoConversationsID = '67cfe70069e9058aa30db4b2';
+            w[c] = w[c] || function() {
+                (w[c].q = w[c].q || []).push(arguments);
+            };
+            var s = d.createElement('script');
+            s.async = true;
+            s.src = 'https://conversations-widget.brevo.com/brevo-conversations.js';
+            if (d.head) d.head.appendChild(s);
+            
+            var spinner = document.getElementById('spinner');
+            var arrow = document.getElementById('arrow');
+            var chatOpened = false;
+            var widgetReady = false;
+            
+            // Function to try opening chat
+            function tryOpenChat() {
+                if (window.BrevoConversations && !widgetReady) {
+                    widgetReady = true;
+                    
+                    // Hide spinner when widget is ready
+                    spinner.classList.add('hidden');
+                    
+                    // Auto-open chat on page load
+                    window.BrevoConversations('openChat', true);
+                    chatOpened = true;
+                    
+                    // Listen for when user closes the chat
+                    window.BrevoConversations('onChatClosed', function() {
+                        // Show arrow when user closes chat
+                        arrow.classList.add('visible');
+                    });
+                    
+                    // Listen for when user opens the chat
+                    window.BrevoConversations('onChatOpened', function() {
+                        // Hide arrow when user opens chat
+                        arrow.classList.remove('visible');
+                    });
+                    
+                    return true;
+                }
+                return false;
+            }
+            
+            // Try opening chat multiple times to ensure it opens
+            var attempts = 0;
+            var maxAttempts = 20;
+            var interval = setInterval(function() {
+                attempts++;
+                if (tryOpenChat() || attempts >= maxAttempts) {
+                    clearInterval(interval);
+                    // Hide spinner anyway after max attempts
+                    if (attempts >= maxAttempts && !widgetReady) {
+                        spinner.classList.add('hidden');
+                    }
+                }
+            }, 500); // Try every 500ms
+            
+        })(document, window, 'BrevoConversations');
+    </script>
+    <!-- /Brevo Conversations {/literal} -->
+</body>
+</html>
